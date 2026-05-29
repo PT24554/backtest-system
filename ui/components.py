@@ -8,6 +8,9 @@ Font base: 15px (tăng 2px so với thiết kế cũ).
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 
+# Auto-load module names từ registry (không cần sửa khi thêm module mới)
+from modules import entry as _entry_pkg, sl as _sl_pkg, tp as _tp_pkg
+
 FONT = "'Be Vietnam Pro', 'Inter', 'Segoe UI', sans-serif"
 
 # ── Palette ───────────────────────────────────────────────────────────────────
@@ -43,10 +46,10 @@ CARD_GRADIENT = {
     "time":  C["grad_time"],
 }
 
-# ── Module option lists ───────────────────────────────────────────────────────
-ENTRY_MODULES = ["Màu nến", "Nến bất thường", "Tròn số", "Trendline"]
-SL_MODULES    = ["Nến tín hiệu", "Tròn số", "Hỗ trợ/Kháng cự"]
-TP_MODULES    = ["R:R cố định", "Tròn số", "Hỗ trợ/Kháng cự"]
+# ── Module option lists (tự động từ registry — thêm file mới là tự có) ───────
+ENTRY_MODULES: list[str] = _entry_pkg.names()   # scan modules/entry/
+SL_MODULES:    list[str] = _sl_pkg.names()      # scan modules/sl/
+TP_MODULES:    list[str] = _tp_pkg.names()      # scan modules/tp/
 
 TF_OPTIONS  = [{"label": t, "value": t} for t in ["M1","M5","M15","M30","H1","H4","D1"]]
 HTF_OPTIONS = [{"label": t, "value": t} for t in ["M15","M30","H1","H4","D1"]]

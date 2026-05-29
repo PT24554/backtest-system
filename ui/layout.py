@@ -551,7 +551,7 @@ def _sym_label(s: str) -> str:
 def _nav_lbl() -> dict:
     return {
         "fontSize": "9px", "fontWeight": "700",
-        "color": "rgba(255,255,255,0.5)",
+        "color": "rgba(000,255,255,0.5)",
         "textTransform": "uppercase", "letterSpacing": "1.2px",
         "marginBottom": "5px", "fontFamily": FONT,
     }
