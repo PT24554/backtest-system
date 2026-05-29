@@ -57,23 +57,42 @@ HTF_OPTIONS = [{"label": t, "value": t} for t in ["M15","M30","H1","H4","D1"]]
 
 # ── Card ──────────────────────────────────────────────────────────────────────
 
-def card(key: str, title: str, icon: str, children) -> html.Div:
-    """Card với thanh gradient + tiêu đề + nội dung."""
+def card(key: str, title: str, icon: str, children, note: str = "") -> html.Div:
+    """Card với header gradient + nội dung.
+
+    Args:
+        note: dòng phụ hiển thị trong header (ví dụ quy tắc kết hợp module).
+    """
+    gradient = CARD_GRADIENT.get(key, C["grad_entry"])
     return html.Div([
-        html.Div(style={
-            "height": "4px",
-            "background": CARD_GRADIENT.get(key, C["grad_entry"]),
+        # ── Gradient header ───────────────────────────────────────────────
+        html.Div([
+            html.Span(icon, style={
+                "fontSize": "18px", "marginRight": "9px", "flexShrink": "0",
+            }),
+            html.Div([
+                html.Span(title, style={
+                    "fontSize": "13px", "fontWeight": "800",
+                    "letterSpacing": "1.2px", "textTransform": "uppercase",
+                    "color": "white",
+                }),
+                *([html.Span(note, style={
+                    "fontSize": "11px", "fontWeight": "400",
+                    "color": "rgba(255,255,255,0.72)",
+                    "letterSpacing": "0.2px",
+                    "fontStyle": "italic",
+                    "marginTop": "2px",
+                    "display": "block",
+                })] if note else []),
+            ], style={"display": "flex", "flexDirection": "column"}),
+        ], style={
+            "padding": "11px 20px",
+            "display": "flex",
+            "alignItems": "center",
+            "background": gradient,
             "borderRadius": "14px 14px 0 0",
         }),
-        html.Div([
-            html.Span(icon, style={"fontSize": "18px", "marginRight": "9px"}),
-            html.Span(title, style={
-                "fontSize": "13px", "fontWeight": "800",
-                "letterSpacing": "1.2px", "textTransform": "uppercase",
-                "color": C["text"],
-            }),
-        ], style={"padding": "14px 20px 10px", "display": "flex", "alignItems": "center"}),
-        html.Hr(style={"margin": "0 20px", "borderColor": C["border"]}),
+        # ── Body ──────────────────────────────────────────────────────────
         html.Div(children, style={"padding": "16px 20px 20px"}),
     ], style={
         "background": C["white"],
@@ -88,28 +107,31 @@ def card(key: str, title: str, icon: str, children) -> html.Div:
 # ── Module checklist ──────────────────────────────────────────────────────────
 
 def module_checklist(check_id: str, modules: list[str], accent_color: str) -> dcc.Checklist:
-    """Checklist hiện đại với accentColor theo màu nhóm."""
     return dcc.Checklist(
         id=check_id,
-        options=[{"label": f"  {m}", "value": m} for m in modules],
+        options=[{"label": m, "value": m} for m in modules],
         value=[],
+        className="module-checklist",
         labelStyle={
             "display": "flex",
             "alignItems": "center",
-            "padding": "6px 10px",
-            "marginBottom": "3px",
-            "borderRadius": "8px",
+            "gap": "9px",
+            "padding": "8px 12px 8px 10px",
+            "marginBottom": "5px",
+            "borderRadius": "5px",
             "cursor": "pointer",
             "fontSize": "14px",
             "fontFamily": FONT,
         },
         inputStyle={
-            "marginRight": "9px",
-            "width": "16px",
-            "height": "16px",
+            "width": "15px",
+            "height": "15px",
             "accentColor": accent_color,
             "cursor": "pointer",
             "flexShrink": "0",
+            "margin": "0",
+            "marginLeft": "10px",
+            "verticalAlign": "middle",
         },
     )
 
@@ -130,29 +152,24 @@ def sub_label(text: str, color: str = None) -> html.Div:
 
 def stat_card(label: str, val_id: str, default: str = "—",
               gradient: str = None) -> html.Div:
+    bg = gradient or C["grad_results"]
     return html.Div([
-        html.Div(style={
-            "height": "3px",
-            "background": gradient or C["grad_results"],
-            "borderRadius": "8px 8px 0 0",
+        html.Div(label, style={
+            "fontSize": "10px", "fontWeight": "700",
+            "color": "rgba(255,255,255,0.72)",
+            "textTransform": "uppercase", "letterSpacing": "0.9px",
+            "marginBottom": "8px", "fontFamily": FONT,
         }),
-        html.Div([
-            html.Div(label, style={
-                "fontSize": "11px", "fontWeight": "700", "color": C["muted"],
-                "textTransform": "uppercase", "letterSpacing": "0.7px",
-                "marginBottom": "7px", "fontFamily": FONT,
-            }),
-            html.Div(default, id=val_id, style={
-                "fontSize": "24px", "fontWeight": "800",
-                "color": C["text"], "lineHeight": "1.1",
-                "fontFamily": FONT,
-            }),
-        ], style={"padding": "13px 16px 15px"}),
+        html.Div(default, id=val_id, style={
+            "fontSize": "26px", "fontWeight": "800",
+            "color": "white", "lineHeight": "1.1",
+            "fontFamily": FONT,
+        }),
     ], style={
-        "background": C["white"],
-        "borderRadius": "10px",
-        "border": f"1px solid {C['border']}",
-        "boxShadow": "0 1px 8px rgba(99,102,241,0.07)",
+        "background": bg,
+        "borderRadius": "12px",
+        "padding": "16px 18px 18px",
+        "boxShadow": "0 4px 16px rgba(0,0,0,0.12)",
     })
 
 
@@ -162,14 +179,17 @@ def num_input(input_id: str, value, prefix: str = "", suffix: str = "",
               width: str = "90px") -> html.Div:
     border = f"1px solid {C['border']}"
     base = {
-        "padding": "7px 10px", "fontSize": "14px",
+        "padding": "0 10px", "fontSize": "14px",
         "border": border, "outline": "none",
         "background": C["white"], "fontFamily": FONT,
+        "boxSizing": "border-box", "height": "40px",
     }
     tag = {
-        "padding": "7px 10px", "background": "#f8fafc",
+        "padding": "0 10px", "background": "#f8fafc",
         "border": border, "fontSize": "13px",
         "color": C["muted"], "fontFamily": FONT,
+        "boxSizing": "border-box", "height": "40px",
+        "display": "flex", "alignItems": "center",
     }
     children = []
     if prefix:
@@ -189,4 +209,4 @@ def num_input(input_id: str, value, prefix: str = "", suffix: str = "",
         children.append(html.Span(suffix, style={
             **tag, "borderLeft": "none", "borderRadius": "0 8px 8px 0",
         }))
-    return html.Div(children, style={"display": "flex", "alignItems": "center"})
+    return html.Div(children, style={"display": "flex", "alignItems": "stretch"})

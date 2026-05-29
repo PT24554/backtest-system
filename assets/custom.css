@@ -1,0 +1,72 @@
+/*
+ * custom.css
+ * ──────────
+ * Fix dropdown text visibility inside the dark header.
+ * Root cause: header has color:white which Dash's react-select inherits,
+ * making selected-value text white-on-white.
+ * We target both old (react-select v1 class names) and new (emotion/v5 pattern).
+ */
+
+/* ── react-select v1 class names (Dash < 2.9) ── */
+#dd-symbol .Select-value-label,
+#dd-tf     .Select-value-label,
+#dd-symbol .Select-placeholder,
+#dd-tf     .Select-placeholder,
+#dd-symbol .Select-input input,
+#dd-tf     .Select-input input {
+    color: #0f172a !important;
+}
+
+/* ── react-select v5 / emotion class names (Dash 2.9+) ──
+   Use attribute substring selectors since hashes are dynamic.          */
+#dd-symbol [class*="singleValue"],
+#dd-tf     [class*="singleValue"],
+#dd-symbol [class*="placeholder"],
+#dd-tf     [class*="placeholder"],
+#dd-symbol [class*="Input"] input,
+#dd-tf     [class*="Input"] input {
+    color: #0f172a !important;
+}
+
+/* ── Nuclear option: all text inside the dropdown containers ──
+   Scoped tightly to just these two IDs so nothing else is affected.    */
+#dd-symbol,
+#dd-tf {
+    color: #0f172a !important;
+}
+
+/* ── Module checklist — card-style items ── */
+.module-checklist > label {
+    transition: background 0.12s, border-color 0.12s;
+    break-inside: avoid;
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 5px !important;
+    border-radius: 5px !important;
+    line-height: 1 !important;
+}
+.module-checklist > label input[type="checkbox"] {
+    flex-shrink: 0;
+    align-self: center;
+    position: relative;
+    top: 0;
+}
+.module-checklist > label:nth-child(odd) {
+    background: #f8fafc;
+}
+.module-checklist > label:nth-child(even) {
+    background: #eef2ff;
+}
+.module-checklist > label:hover {
+    background: #e0e7ff !important;
+    border-color: rgba(99,102,241,0.28) !important;
+}
+.module-checklist > label:has(input:checked) {
+    background: #ede9fe !important;
+    border-color: rgba(99,102,241,0.35) !important;
+}
+
+/* ── Hide RangeSlider tooltip entirely ── */
+.rc-slider-tooltip {
+    display: none !important;
+}

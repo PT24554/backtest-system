@@ -9,6 +9,8 @@ Layout mới:
   - Giờ GD dùng range slider + text input tinh chỉnh
 """
 
+from datetime import date, timedelta
+
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
@@ -19,6 +21,12 @@ from ui.components import (
     card, module_checklist, sub_label, stat_card, num_input,
 )
 from data.loader import list_available
+
+# ── Date defaults ─────────────────────────────────────────────────────────────
+_today          = date.today()
+_first_this_m   = _today.replace(day=1)
+_DATE_FROM      = "2010-01-04"                           # First working day 2010
+_DATE_TO        = (_first_this_m - timedelta(days=1)).isoformat()  # Last day prev month
 
 
 # ── Public ────────────────────────────────────────────────────────────────────
@@ -73,23 +81,24 @@ def _header(symbols: list, default_sym) -> html.Div:
         ], style={"display": "flex", "alignItems": "center"}),
 
         # Symbol + TF dropdowns
+        # color:#0f172a trên wrapper để reset kế thừa "white" từ header
         html.Div([
             html.Div([
                 html.Div("DỮ LIỆU", style=_nav_lbl()),
                 dcc.Dropdown(
                     id="dd-symbol", options=symbol_opts, value=default_sym,
                     clearable=False, placeholder="Chọn file...",
-                    style={"width": "230px", "fontSize": "14px"},
+                    style={"width": "230px", "fontSize": "14px", "color": "#0f172a"},
                 ),
-            ], style={"marginRight": "14px"}),
+            ], style={"marginRight": "14px", "color": "#0f172a"}),
             html.Div([
                 html.Div("TIMEFRAME", style=_nav_lbl()),
                 dcc.Dropdown(
                     id="dd-tf", options=TF_OPTIONS, value="H1",
                     clearable=False,
-                    style={"width": "95px", "fontSize": "14px"},
+                    style={"width": "95px", "fontSize": "14px", "color": "#0f172a"},
                 ),
-            ]),
+            ], style={"color": "#0f172a"}),
         ], style={"display": "flex", "alignItems": "flex-end"}),
 
         # Status
@@ -133,35 +142,14 @@ def _config_screen() -> html.Div:
 
 def _entry_card():
     return card("entry", "Entry Conditions", "📥", html.Div([
-        # Hai checklist nằm cạnh nhau
-        dbc.Row([
-            dbc.Col([
-                html.Div([
-                    html.Span("✅", style={"marginRight": "6px"}),
-                    html.Span("Bắt buộc CÓ", style={
-                        "fontSize": "13px", "fontWeight": "700",
-                        "color": C["must_have"], "letterSpacing": "0.5px",
-                    }),
-                ], style={"marginBottom": "10px", "display": "flex", "alignItems": "center"}),
-                module_checklist("check-entry-must-have", ENTRY_MODULES, C["must_have"]),
-            ], md=6, style={"paddingRight": "14px"}),
+        # Module checklist — 2 cột
+        sub_label("Chọn module Entry", color=C["must_have"]),
+        html.Div(
+            module_checklist("check-entry-must-have", ENTRY_MODULES, C["must_have"]),
+            style={"columns": "2", "columnGap": "8px"},
+        ),
 
-            dbc.Col([
-                html.Div([
-                    html.Span("❌", style={"marginRight": "6px"}),
-                    html.Span("Bắt buộc KHÔNG", style={
-                        "fontSize": "13px", "fontWeight": "700",
-                        "color": C["must_not"], "letterSpacing": "0.5px",
-                    }),
-                ], style={"marginBottom": "10px", "display": "flex", "alignItems": "center"}),
-                module_checklist("check-entry-must-not", ENTRY_MODULES, C["must_not"]),
-            ], md=6, style={
-                "paddingLeft": "14px",
-                "borderLeft": f"1px solid {C['border']}",
-            }),
-        ], className="g-0"),
-
-        html.Hr(style={"margin": "16px 0", "borderColor": C["border"]}),
+        html.Hr(style={"margin": "12px 0 16px", "borderColor": C["border"]}),
 
         dbc.Row([
             # Trigger
@@ -179,9 +167,9 @@ def _entry_card():
                 ),
             ], md=12, style={"marginBottom": "16px"}),
 
-            # Giờ giao dịch — range slider + text inputs
+            # Giờ giao dịch — range slider (no tooltip)
             dbc.Col([
-                sub_label("Giờ giao dịch (GMT+7)"),
+                sub_label("Giờ giao dịch (GMT)"),
                 dcc.RangeSlider(
                     id="slider-hours",
                     min=0, max=24, step=1,
@@ -189,27 +177,14 @@ def _entry_card():
                     marks={i: {"label": f"{i:02d}h",
                                "style": {"fontSize": "11px", "color": C["muted"]}}
                            for i in [0, 4, 8, 12, 16, 20, 24]},
-                    tooltip={"placement": "bottom", "always_visible": False},
                     allowCross=False,
+                    tooltip={"always_visible": False},
                 ),
-                # Display + text fine-tune
-                html.Div(id="slider-hours-display", style={
-                    "textAlign": "center", "fontSize": "14px",
-                    "color": C["must_have"], "fontWeight": "600",
-                    "margin": "8px 0 10px",
-                }),
-                html.Div([
-                    html.Span("Tinh chỉnh:", style={
-                        "fontSize": "13px", "color": C["muted"], "marginRight": "10px",
-                    }),
-                    dcc.Input(id="input-hour-from", type="text", value="00:00",
-                              style=_time_inp(), debounce=True),
-                    html.Span("→", style={"padding": "0 10px", "color": C["muted"],
-                                          "fontSize": "16px"}),
-                    dcc.Input(id="input-hour-to", type="text", value="23:59",
-                              style=_time_inp(), debounce=True),
-                ], style={"display": "flex", "alignItems": "center"}),
-            ], md=12, style={"marginBottom": "16px"}),
+            ], md=12, style={
+                "marginBottom": "16px",
+                "paddingTop": "15px",
+                "paddingBottom": "15px",
+            }),
 
             # Ngày giao dịch
             dbc.Col([
@@ -232,7 +207,7 @@ def _entry_card():
                 ),
             ], md=12),
         ]),
-    ]))
+    ]), note="Khi nhiều module: tất cả đều phải thỏa mãn")
 
 
 # ── SL card ───────────────────────────────────────────────────────────────────
@@ -242,19 +217,13 @@ def _sl_card():
         sub_label("Chọn module SL", color=C["sl_color"]),
         module_checklist("check-sl", SL_MODULES, C["sl_color"]),
 
-        html.Div(style={
-            "fontSize": "12px", "color": C["muted"],
-            "fontStyle": "italic", "margin": "6px 0 14px",
-        }, children="→ Khi nhiều module: lấy SL gần entry nhất"),
-
-        html.Hr(style={"borderColor": C["border"], "margin": "4px 0 14px"}),
+        html.Hr(style={"borderColor": C["border"], "margin": "12px 0 14px"}),
 
         sub_label("Fallback (khi module không cho kết quả)"),
         dcc.RadioItems(
             id="radio-sl-fallback",
             options=[
                 {"label": "  Cố định (pips)", "value": "pips"},
-                {"label": "  Nến tín hiệu",   "value": "candle"},
             ],
             value="pips",
             labelStyle={"display": "block", "fontSize": "14px", "marginBottom": "6px"},
@@ -262,12 +231,7 @@ def _sl_card():
         ),
         html.Div(id="div-sl-fallback-pips", style={"marginTop": "8px"},
                  children=[num_input("input-sl-pips", 50, suffix=" pips", width="70px")]),
-
-        html.Hr(style={"borderColor": C["border"], "margin": "14px 0"}),
-
-        sub_label("Buffer SL"),
-        num_input("input-sl-buffer", 5, suffix=" pips", width="70px"),
-    ]))
+    ]), note="Khi nhiều module: lấy SL gần entry nhất")
 
 
 # ── TP card ───────────────────────────────────────────────────────────────────
@@ -277,12 +241,7 @@ def _tp_card():
         sub_label("Chọn module TP", color=C["tp_color"]),
         module_checklist("check-tp", TP_MODULES, C["tp_color"]),
 
-        html.Div(style={
-            "fontSize": "12px", "color": C["muted"],
-            "fontStyle": "italic", "margin": "6px 0 14px",
-        }, children="→ Khi nhiều module: lấy TP gần entry nhất"),
-
-        html.Hr(style={"borderColor": C["border"], "margin": "4px 0 14px"}),
+        html.Hr(style={"borderColor": C["border"], "margin": "12px 0 14px"}),
 
         sub_label("Fallback"),
         dcc.RadioItems(
@@ -302,27 +261,7 @@ def _tp_card():
                  children=[num_input("input-tp-pips", 50, suffix=" pips", width="70px")],
                  style={"display": "none", "marginTop": "8px"}),
 
-        html.Hr(style={"borderColor": C["border"], "margin": "14px 0"}),
-
-        dcc.Checklist(
-            id="check-partial-tp",
-            options=[{"label": "  Partial TP", "value": "on"}],
-            value=[],
-            labelStyle={"fontSize": "14px"},
-            inputStyle={"marginRight": "8px", "accentColor": C["tp_color"]},
-        ),
-        html.Div(id="div-partial-tp", style={"display": "none"}, children=[
-            html.Div([
-                html.Span("Đóng", style={"fontSize": "14px", "color": C["muted"]}),
-                html.Div(style={"margin": "0 8px"},
-                         children=[num_input("input-partial-pct", 50, suffix="%", width="58px")]),
-                html.Span("tại R:R", style={"fontSize": "14px", "color": C["muted"], "marginRight": "8px"}),
-                num_input("input-partial-rr", 1.0, width="60px"),
-            ], style={"display": "flex", "alignItems": "center",
-                      "flexWrap": "wrap", "gap": "6px",
-                      "marginTop": "10px", "paddingLeft": "18px"}),
-        ]),
-    ]))
+    ]), note="Khi nhiều module: lấy TP gần entry nhất")
 
 
 # ── Risk card ─────────────────────────────────────────────────────────────────
@@ -351,48 +290,23 @@ def _time_card():
         dbc.Row([
             dbc.Col([
                 sub_label("Từ ngày"),
-                dcc.DatePickerSingle(id="date-from", display_format="DD/MM/YYYY",
-                                     placeholder="dd/mm/yyyy"),
+                dcc.DatePickerSingle(
+                    id="date-from",
+                    date=_DATE_FROM,
+                    display_format="DD/MM/YYYY",
+                    placeholder="dd/mm/yyyy",
+                ),
             ], sm=6),
             dbc.Col([
                 sub_label("Đến ngày"),
-                dcc.DatePickerSingle(id="date-to", display_format="DD/MM/YYYY",
-                                     placeholder="dd/mm/yyyy"),
+                dcc.DatePickerSingle(
+                    id="date-to",
+                    date=_DATE_TO,
+                    display_format="DD/MM/YYYY",
+                    placeholder="dd/mm/yyyy",
+                ),
             ], sm=6),
-        ], className="g-2", style={"marginBottom": "18px"}),
-
-        dcc.Checklist(
-            id="check-mtf",
-            options=[{"label": "  Multi-Timeframe filter", "value": "on"}],
-            value=[],
-            labelStyle={"fontSize": "14px"},
-            inputStyle={"marginRight": "8px", "accentColor": C["must_have"]},
-        ),
-        html.Div(id="div-mtf-settings", style={"display": "none"}, children=[
-            html.Div(style={"marginTop": "12px", "paddingLeft": "18px"}, children=[
-                html.Div([
-                    sub_label("Khung xu hướng"),
-                    dcc.Dropdown(id="dd-htf", options=HTF_OPTIONS, value="H4",
-                                 clearable=False,
-                                 style={"width": "110px", "fontSize": "14px"}),
-                ], style={"marginBottom": "12px"}),
-                html.Div([
-                    sub_label("Hướng cho phép"),
-                    dcc.RadioItems(
-                        id="radio-htf-dir",
-                        options=[
-                            {"label": " Cả BUY & SELL", "value": "both"},
-                            {"label": " Chỉ BUY",       "value": "buy"},
-                            {"label": " Chỉ SELL",      "value": "sell"},
-                        ],
-                        value="both",
-                        labelStyle={"display": "block", "fontSize": "14px",
-                                    "marginBottom": "5px"},
-                        inputStyle={"marginRight": "8px", "accentColor": C["must_have"]},
-                    ),
-                ]),
-            ]),
-        ]),
+        ], className="g-2"),
     ]))
 
 
@@ -401,21 +315,24 @@ def _time_card():
 def _run_area():
     return html.Div([
         html.Div([
-            html.Div(style={
-                "height": "4px", "background": C["grad_run"],
-                "borderRadius": "14px 14px 0 0",
-            }),
+            # Gradient header (khớp với card())
             html.Div([
-                html.Div("▶", style={
-                    "fontSize": "44px", "textAlign": "center",
-                    "marginBottom": "10px", "opacity": ".75",
+                html.Span("▶", style={"fontSize": "16px", "marginRight": "9px"}),
+                html.Span("Chạy Backtest", style={
+                    "fontSize": "13px", "fontWeight": "800",
+                    "letterSpacing": "1.2px", "textTransform": "uppercase",
+                    "color": "white",
                 }),
-                html.Div("Nhấn để bắt đầu", style={
-                    "fontSize": "12px", "fontWeight": "600",
-                    "color": C["muted"], "textTransform": "uppercase",
-                    "letterSpacing": "1px", "textAlign": "center",
-                    "marginBottom": "18px",
-                }),
+            ], style={
+                "padding": "13px 20px",
+                "display": "flex",
+                "alignItems": "center",
+                "background": C["grad_run"],
+                "borderRadius": "14px 14px 0 0",
+                "flexShrink": "0",
+            }),
+            # Content — vertically centred
+            html.Div([
                 html.Button(
                     "CHẠY BACKTEST",
                     id="btn-run",
@@ -436,13 +353,23 @@ def _run_area():
                     "textAlign": "center", "color": C["muted"],
                     "minHeight": "20px",
                 }),
-            ], style={"padding": "20px"}),
+            ], style={
+                "padding": "20px",
+                "flex": "1",
+                "display": "flex",
+                "flexDirection": "column",
+                "justifyContent": "center",
+            }),
         ], style={
-            "background": C["white"], "borderRadius": "14px",
+            "background": C["white"],
+            "borderRadius": "14px",
             "border": f"1px solid {C['border']}",
             "boxShadow": "0 2px 14px rgba(16,185,129,0.1)",
+            "height": "100%",
+            "display": "flex",
+            "flexDirection": "column",
         }),
-    ])
+    ], style={"height": "100%"})
 
 
 # ── Results screen ────────────────────────────────────────────────────────────
@@ -554,14 +481,6 @@ def _nav_lbl() -> dict:
         "color": "rgba(000,255,255,0.5)",
         "textTransform": "uppercase", "letterSpacing": "1.2px",
         "marginBottom": "5px", "fontFamily": FONT,
-    }
-
-def _time_inp() -> dict:
-    return {
-        "width": "76px", "padding": "6px 8px", "textAlign": "center",
-        "border": f"1px solid {C['border']}", "borderRadius": "8px",
-        "fontSize": "14px", "outline": "none", "background": C["white"],
-        "fontFamily": FONT,
     }
 
 def _empty_chart():
