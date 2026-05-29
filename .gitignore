@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDE / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+
+# Parquet data (có thể lớn, không commit lên git)
+storage/parquet/*.parquet
+
+# Output / reports
+output/*.csv
+output/*.xlsx
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets / config cá nhân
+*.env
+.env
+config.local.py
